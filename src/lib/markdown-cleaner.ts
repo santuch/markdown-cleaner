@@ -171,7 +171,7 @@ function removeLinksAndImages(text: string): string {
             // Remove reference-style images ![alt][ref] -> alt text
             .replace(/!\[([^\]]*)\]\[[^\]]*\]/g, "$1")
             // Convert links [text](url "title") -> text (url)
-            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 $2")
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$2")
             // Remove reference-style links [text][ref] -> text
             .replace(/\[([^\]]+)\]\[[^\]]*\]/g, "$1")
         // Keep bare URLs
