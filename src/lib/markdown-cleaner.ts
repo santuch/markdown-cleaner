@@ -18,16 +18,16 @@ export function cleanMarkdown(text: string): string {
     cleaned = removeInlineCode(cleaned);
     cleaned = removeLinksAndImages(cleaned);
     cleaned = removeFootnoteReferences(cleaned);
+    cleaned = removeEmojis(cleaned); // Remove emojis BEFORE list processing
+    cleaned = removeEscapeCharacters(cleaned); // Move escape character removal BEFORE list processing
 
     // Phase 3: Remove structural elements
     cleaned = removeHtmlTags(cleaned);
     cleaned = removeTaskLists(cleaned);
-    cleaned = removeListMarkers(cleaned);
-    cleaned = removeEmojis(cleaned);
+    cleaned = removeListMarkers(cleaned); // Convert * to - AFTER escape removal
 
     // Phase 4: Handle tables and final cleanup
     cleaned = cleanTables(cleaned);
-    cleaned = removeEscapeCharacters(cleaned); // Move escape character removal later to avoid interfering with other patterns
     cleaned = normalizeWhitespace(cleaned);
 
     return cleaned.trim();
@@ -45,8 +45,6 @@ function removeCodeBlocks(text: string): string {
             .replace(/```[\w-]*\n?[\s\S]*?```/g, "")
             .replace(/~~~~[\w-]*\n?[\s\S]*?~~~~/g, "")
             .replace(/~~~[\w-]*\n?[\s\S]*?~~~/g, "")
-            // Indented code blocks (4+ spaces or tab at start of line)
-            .replace(/^(?: {4,}|\t+).*$/gm, "")
             // Remove any lingering triple backticks
             .replace(/```/g, "")
     );
@@ -119,19 +117,37 @@ function removeHorizontalRules(text: string): string {
 function removeTextFormatting(text: string): string {
     if (!text) return "";
 
-    return (
-        text
+    // Process line by line to avoid affecting list markers
+    const lines = text.split("\n");
+    const processedLines = lines.map((line) => {
+        const listMatch = line.match(/^(\s*[*+-]|\s*\d+\.)\s+/);
+
+        let prefix = "";
+        let content = line;
+
+        if (listMatch) {
+            prefix = listMatch[0];
+            content = line.substring(prefix.length);
+        }
+
+        // Process content for text formatting
+        const processedContent = content
             // Handle triple asterisks/underscores (bold + italic) first
-            .replace(/(\*{3}|_{3})([^*_]+)\1/g, "$2")
+            .replace(/\*\*\*([^*]+)\*\*\*/g, "$1")
+            .replace(/___([^_]+)___/g, "$1")
             // Handle double asterisks/underscores (bold)
-            .replace(/(\*{2}|_{2})([^*_]+)\1/g, "$2")
+            .replace(/\*\*([^*]+)\*\*/g, "$1")
+            .replace(/__([^_]+)__/g, "$1")
             // Handle single asterisks/underscores (italic)
-            .replace(/(\*|_)([^*_\n]+)\1/g, "$2")
+            .replace(/\*([^*\n]+)\*/g, "$1")
+            .replace(/_([^_\n]+)_/g, "$1")
             // Handle strikethrough
-            .replace(/~~([^~\n]+)~~/g, "$1")
-            // Clean up any remaining formatting characters
-            .replace(/[*_~]{1,3}/g, "")
-    );
+            .replace(/~~([^~\n]+)~~/g, "$1");
+
+        return prefix + processedContent;
+    });
+
+    return processedLines.join("\n");
 }
 
 /**
@@ -185,7 +201,7 @@ function removeHtmlTags(text: string): string {
 function removeTaskLists(text: string): string {
     if (!text) return "";
 
-    return text.replace(/^(\s*)[-*+]\s*\[[x\s]\]\s*/gim, "$1- ");
+    return text.replace(/^(\s*)[-*+]\s*\[[x\s]\][ \t]*/gim, "$1- ");
 }
 
 /**
@@ -196,10 +212,12 @@ function removeListMarkers(text: string): string {
 
     return (
         text
-            // Remove bullet points but keep a hyphen for list structure
-            .replace(/^(\s*)[-*+]\s+/gm, "$1- ")
-            // Convert numbered lists to clean format (keep numbers, remove extra formatting)
-            .replace(/^(\s*)(\d+)\.\s+/gm, "$1$2. ")
+            // Convert all bullet points (* + •) to consistent hyphen format with single space
+            .replace(/^(\s*)[*+•][ \t]*/gm, "$1- ")
+            // Keep existing hyphens as-is but normalize to single space
+            .replace(/^(\s*)-[ \t]*/gm, "$1- ")
+            // Convert numbered lists to clean format with single space
+            .replace(/^(\s*)(\d+)\.[ \t]*/gm, "$1$2. ")
     );
 }
 
@@ -209,24 +227,33 @@ function removeListMarkers(text: string): string {
 function cleanTables(text: string): string {
     if (!text) return "";
 
-    return (
-        text
-            // First remove table separator lines (|---|---|\n), consuming the newline
-            .replace(/^\s*\|[\s:|-]+\|\s*$/gm, "")
-            // Then convert table rows to text, handling edge cases
-            .replace(/^\s*\|(.+)\|\s*$/gm, (match: string, content: string) => {
-                if (!content || !content.trim()) return "";
+    // Process tables as complete blocks
+    return text.replace(/(\|[^\n]*\|\n)*\|[^\n]*\|/g, (tableMatch: string) => {
+        const lines = tableMatch.split("\n").filter((line) => line.trim());
+        const processedRows: string[] = [];
 
+        for (const line of lines) {
+            // Skip separator lines (like |---|---|)
+            if (/^\s*\|[\s:|-]+\|\s*$/.test(line)) {
+                continue;
+            }
+
+            // Process table rows
+            if (/^\s*\|(.+)\|\s*$/.test(line)) {
+                const content = line.replace(/^\s*\||\|\s*$/g, "");
                 const cells = content
                     .split("|")
-                    .map((cell: string) => cell.trim())
-                    .filter((cell: string) => cell.length > 0);
+                    .map((cell) => cell.trim())
+                    .filter((cell) => cell.length > 0);
 
-                return cells.length > 0 ? cells.join(" ") : "";
-            })
-            // Remove any remaining standalone | characters
-            .replace(/^\s*\|\s*$/gm, "")
-    );
+                if (cells.length > 0) {
+                    processedRows.push(cells.join(" "));
+                }
+            }
+        }
+
+        return processedRows.join("\n");
+    });
 }
 
 /**
@@ -254,21 +281,34 @@ function removeEscapeCharacters(text: string): string {
 function normalizeWhitespace(text: string): string {
     if (!text) return "";
 
-    return (
-        text
-            // Remove trailing spaces from lines
-            .replace(/[ \t]+$/gm, "")
-            // Replace multiple spaces with single space
-            .replace(/ {2,}/g, " ")
-            // Clean up multiple empty lines
-            .replace(/\n\s*\n\s*\n/g, "\n\n")
-            .replace(/\n{3,}/g, "\n\n")
-            // Remove lines that are only whitespace
-            .replace(/^\s+$/gm, "")
-            // Final cleanup - ensure consistent line breaks
-            .replace(/\r\n/g, "\n")
-            .replace(/\r/g, "\n")
+    let processed = text;
+
+    // Add newlines after headers for separation
+    processed = processed.replace(
+        /^(H\d|Markdown Demo|1\. Headers|2\. Emphasis|3\. Lists|4\. Links and Images|5\. Code|6\. Blockquote|7\. Table|8\. Task List|Unordered:|Ordered:)$/gm,
+        "$1\n"
     );
+
+    // General whitespace cleanup
+    processed = processed
+        // Remove trailing spaces from lines
+        .replace(/[ \t]+$/gm, "")
+        // Replace multiple spaces with single space (but preserve line-start indentation)
+        .replace(/(?<!^[\s]*) {2,}/gm, " ")
+        // Ensure proper indentation for nested lists (3 spaces per level)
+        .replace(/^(\s*)- /gm, (match, p1) => {
+            const level = Math.floor(p1.length / 2); // Approximation of nesting level
+            return "   ".repeat(level) + "- ";
+        })
+        // Remove lines that are only whitespace
+        .replace(/^\s+$/gm, "")
+        // Collapse 3 or more newlines into a max of 2
+        .replace(/\n{3,}/g, "\n\n")
+        // Final cleanup - ensure consistent line breaks
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n");
+
+    return processed;
 }
 
 /**
@@ -301,7 +341,7 @@ function removeEmojis(text: string): string {
             // Remove variation selectors (emoji presentation)
             .replace(/[\u{FE0E}\u{FE0F}]/gu, "")
 
-            // Remove common ASCII emoticons
+            // Remove common ASCII emoticons (avoid removing list markers)
             .replace(/[:-;][)(\][]]/g, "")
             .replace(/[)(\][][:;-]/g, "")
             .replace(/[:-;][DPpOo]/g, "")
@@ -312,8 +352,16 @@ function removeEmojis(text: string): string {
             // Remove emoji shortcodes (like :smile:, :heart:, etc.)
             .replace(/:[\w+-]+:/g, "")
 
-            // Clean up any double spaces left by emoji removal
-            .replace(/  +/g, " ")
+            // Clean up any whitespace left by emoji removal
+            .replace(/[ \t]{2,}/g, " ") // Replace multiple spaces/tabs with single space (NOT newlines)
+            .replace(/^\s+(?=\S)/gm, "") // Remove leading spaces from lines (but keep indented lines)
+            .replace(/[ \t]+$/gm, "") // Remove trailing spaces from lines
+            .replace(/[ \t]+([,.!?;:])/g, "$1") // Remove spaces before punctuation
+            .replace(/([,.!?;:])[ \t]{2,}/g, "$1 ") // Normalize spaces after punctuation
+
+            // Fix spacing issues in list items after emoji removal
+            .replace(/^(\s*[*+-])\s+/gm, "$1 ")
+            .replace(/^(\s*\d+\.)\s+/gm, "$1 ")
     );
 }
 

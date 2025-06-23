@@ -84,15 +84,6 @@ This tests **all** markdown elements!`;
                                 </p>
                             </div>
                         </div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setInput(sampleMarkdown)}
-                            className="hidden sm:flex items-center gap-2"
-                        >
-                            <Sparkles className="h-4 w-4" />
-                            Try Sample
-                        </Button>
                     </div>
                 </div>
             </div>
@@ -106,7 +97,7 @@ This tests **all** markdown elements!`;
                             <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
                             Paste Your Markdown
                         </h2>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -115,6 +106,16 @@ This tests **all** markdown elements!`;
                             >
                                 <Sparkles className="h-4 w-4" />
                                 Try Sample
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleClear}
+                                disabled={!input}
+                                className="flex items-center gap-2 text-red-600 hover:bg-red-50 hover:border-red-200 hover:text-red-700 disabled:text-slate-400"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                Clear
                             </Button>
                             <div className="text-sm text-slate-500">
                                 {input.length.toLocaleString()} characters
@@ -137,19 +138,6 @@ The cleaned version will appear below automatically!"
                             />
                         </CardContent>
                     </Card>
-
-                    <div className="flex items-center justify-between">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleClear}
-                            disabled={!input}
-                            className="flex items-center gap-2 hover:bg-red-50 hover:border-red-200 hover:text-red-700"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                            Clear Input
-                        </Button>
-                    </div>
                 </div>
 
                 {/* Divider with Arrow */}
@@ -223,14 +211,6 @@ The cleaned version will appear below automatically!"
                             readable text instantly. Perfect for ChatGPT
                             responses!
                         </p>
-                        <Button
-                            onClick={() => setInput(sampleMarkdown)}
-                            variant="outline"
-                            className="flex items-center gap-2"
-                        >
-                            <Sparkles className="h-4 w-4" />
-                            Try Sample Content
-                        </Button>
                     </div>
                 )}
                 {/* Features Section */}
