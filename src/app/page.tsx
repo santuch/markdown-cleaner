@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Copy, Trash2, FileText, Sparkles, ArrowRight } from "lucide-react";
+import { Copy, Trash2, FileText, Sparkles } from "lucide-react";
 import { cleanMarkdown, copyToClipboard } from "@/lib/markdown-cleaner";
 
 export default function Home() {
@@ -150,7 +150,6 @@ The cleaned version will appear below automatically!"
                                 <span className="text-sm font-medium text-slate-600">
                                     Cleaned
                                 </span>
-                                <ArrowRight className="h-4 w-4" />
                             </div>
                             <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent flex-1"></div>
                         </div>
