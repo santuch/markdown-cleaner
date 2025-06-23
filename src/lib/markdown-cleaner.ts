@@ -170,12 +170,11 @@ function removeLinksAndImages(text: string): string {
             .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
             // Remove reference-style images ![alt][ref] -> alt text
             .replace(/!\[([^\]]*)\]\[[^\]]*\]/g, "$1")
-            // Remove links [text](url "title") -> text
-            .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+            // Convert links [text](url "title") -> text (url)
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 $2")
             // Remove reference-style links [text][ref] -> text
             .replace(/\[([^\]]+)\]\[[^\]]*\]/g, "$1")
-            // Remove bare URLs
-            .replace(/https?:\/\/[^\s<>"`{}|\\^~[\]]+/g, "")
+        // Keep bare URLs
     );
 }
 
