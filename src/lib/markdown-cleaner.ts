@@ -1,8 +1,3 @@
-/**
- * Enhanced markdown cleaning utility for chatbot responses
- * Removes all markdown formatting and converts to clean plain text
- */
-
 export function cleanMarkdown(text: string): string {
     // Enhanced input validation
     if (!text || typeof text !== "string") return "";
@@ -277,43 +272,6 @@ function normalizeWhitespace(text: string): string {
 }
 
 /**
- * Copy text to clipboard with fallback for older browsers
- */
-export function copyToClipboard(text: string): Promise<boolean> {
-    if (!text || typeof text !== "string") {
-        return Promise.resolve(false);
-    }
-
-    if (navigator.clipboard && window.isSecureContext) {
-        return navigator.clipboard
-            .writeText(text)
-            .then(() => true)
-            .catch(() => false);
-    } else {
-        // Fallback for older browsers
-        return new Promise((resolve) => {
-            try {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.position = "fixed";
-                textArea.style.left = "-999999px";
-                textArea.style.top = "-999999px";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-
-                const successful = document.execCommand("copy");
-                textArea.remove();
-                resolve(successful);
-            } catch (err) {
-                console.error("Copy to clipboard failed:", err);
-                resolve(false);
-            }
-        });
-    }
-}
-
-/**
  * Remove emojis, emoticons, and emoji shortcodes
  */
 function removeEmojis(text: string): string {
@@ -357,4 +315,41 @@ function removeEmojis(text: string): string {
             // Clean up any double spaces left by emoji removal
             .replace(/  +/g, " ")
     );
+}
+
+/**
+ * Copy text to clipboard with fallback for older browsers
+ */
+export function copyToClipboard(text: string): Promise<boolean> {
+    if (!text || typeof text !== "string") {
+        return Promise.resolve(false);
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard
+            .writeText(text)
+            .then(() => true)
+            .catch(() => false);
+    } else {
+        // Fallback for older browsers
+        return new Promise((resolve) => {
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                textArea.style.top = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                const successful = document.execCommand("copy");
+                textArea.remove();
+                resolve(successful);
+            } catch (err) {
+                console.error("Copy to clipboard failed:", err);
+                resolve(false);
+            }
+        });
+    }
 }
