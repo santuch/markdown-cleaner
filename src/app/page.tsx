@@ -1,103 +1,278 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { Copy, Trash2, FileText, Sparkles, ArrowRight } from "lucide-react";
+import { cleanMarkdown, copyToClipboard } from "@/lib/markdown-cleaner";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    const [input, setInput] = useState("");
+    const [copied, setCopied] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    const cleanedText = cleanMarkdown(input);
+
+    const handleCopy = async () => {
+        const success = await copyToClipboard(cleanedText);
+        if (success) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
+    const handleClear = () => {
+        setInput("");
+    };
+
+    const sampleMarkdown = `# Complete ChatGPT Response Test
+
+Here's a **bold** statement with _italic_ text and some \`inline code\`. Also ***bold and italic*** text and ~~strikethrough~~.
+
+## Features:
+- Item 1 with [link](https://example.com)
+- Item 2 with **formatting**
+- Item 3 with \`code\`
+
+### Task Lists:
+- [ ] Uncompleted task
+- [x] Completed task
+
+### Tables:
+| Name | Age | City |
+|------|-----|------|
+| John | 25  | NYC  |
+| Jane | 30  | LA   |
+
+> This is a blockquote with **bold** text.
+
+**HTML tags:** <b>Bold</b> and <i>italic</i> and <code>code</code>.
+
+**Escaped:** \\\\*not italic\\\\* and \\\`not code\\\`
+
+\`\`\`javascript
+function example() {
+  return "code block";
+}
+\`\`\`
+
+Text with footnote[^1] reference.
+
+[^1]: This is the footnote definition.
+
+---
+
+This tests **all** markdown elements!`;
+
+    return (
+        <div className="min-h-screen bg-slate-50">
+            {/* Header */}
+            <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+                <div className="max-w-7xl mx-auto px-4 py-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-indigo-100 rounded-lg">
+                                <FileText className="h-6 w-6 text-indigo-600" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-slate-900">
+                                    Markdown Cleaner
+                                </h1>
+                                <p className="text-sm text-slate-600">
+                                    Transform messy markdown into clean,
+                                    readable text
+                                </p>
+                            </div>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setInput(sampleMarkdown)}
+                            className="hidden sm:flex items-center gap-2"
+                        >
+                            <Sparkles className="h-4 w-4" />
+                            Try Sample
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="max-w-5xl mx-auto px-4 py-8">
+                {/* Input Section */}
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-3">
+                            <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
+                            Paste Your Markdown
+                        </h2>
+                        <div className="flex items-center gap-3">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setInput(sampleMarkdown)}
+                                className="flex items-center gap-2 text-slate-600 hover:text-slate-900"
+                            >
+                                <Sparkles className="h-4 w-4" />
+                                Try Sample
+                            </Button>
+                            <div className="text-sm text-slate-500">
+                                {input.length.toLocaleString()} characters
+                            </div>
+                        </div>
+                    </div>
+
+                    <Card className="shadow-lg border-slate-200/60">
+                        <CardContent className="p-0">
+                            <Textarea
+                                placeholder="Paste your Markdown content here... 
+
+Try pasting a ChatGPT response with formatting like:
+# Headers, **bold text**, *italic*, `code`, [links](url), lists, tables, etc.
+
+The cleaned version will appear below automatically!"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                className="min-h-[300px] border-0 resize-none focus-visible:ring-0 font-mono text-sm rounded-lg placeholder:text-slate-400 placeholder:leading-relaxed"
+                            />
+                        </CardContent>
+                    </Card>
+
+                    <div className="flex items-center justify-between">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleClear}
+                            disabled={!input}
+                            className="flex items-center gap-2 hover:bg-red-50 hover:border-red-200 hover:text-red-700"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Clear Input
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Divider with Arrow */}
+                {input && (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center gap-4 text-slate-400">
+                            <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent flex-1"></div>
+                            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+                                <Sparkles className="h-4 w-4 text-blue-500" />
+                                <span className="text-sm font-medium text-slate-600">
+                                    Cleaned
+                                </span>
+                                <ArrowRight className="h-4 w-4" />
+                            </div>
+                            <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent flex-1"></div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Output Section */}
+                {cleanedText && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-3">
+                                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                                Clean Text Output
+                            </h2>
+                            <div className="flex items-center gap-4">
+                                <div className="text-sm text-slate-500">
+                                    {cleanedText.length.toLocaleString()}{" "}
+                                    characters
+                                </div>
+                                <Button
+                                    onClick={handleCopy}
+                                    disabled={!cleanedText}
+                                    className={`flex items-center gap-2 px-6 transition-all duration-200 ${
+                                        copied
+                                            ? "bg-green-600 hover:bg-green-700"
+                                            : "bg-blue-600 hover:bg-blue-700"
+                                    }`}
+                                >
+                                    <Copy className="h-4 w-4" />
+                                    {copied ? "Copied!" : "Copy Text"}
+                                </Button>
+                            </div>
+                        </div>
+
+                        <Card className="shadow-lg border-slate-200/60 bg-green-50/30">
+                            <CardContent className="p-6">
+                                <div className="bg-white rounded-lg border border-green-200/50 p-6">
+                                    <pre className="whitespace-pre-wrap text-sm text-slate-700 font-sans leading-relaxed">
+                                        {cleanedText}
+                                    </pre>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
+                {/* Empty State */}
+                {!input && (
+                    <div className="mt-16 text-center py-12">
+                        <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <FileText className="h-8 w-8 text-blue-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                            Ready to clean your markdown
+                        </h3>
+                        <p className="text-slate-600 mb-6 max-w-md mx-auto">
+                            Paste any markdown content above and get clean,
+                            readable text instantly. Perfect for ChatGPT
+                            responses!
+                        </p>
+                        <Button
+                            onClick={() => setInput(sampleMarkdown)}
+                            variant="outline"
+                            className="flex items-center gap-2"
+                        >
+                            <Sparkles className="h-4 w-4" />
+                            Try Sample Content
+                        </Button>
+                    </div>
+                )}
+                {/* Features Section */}
+                <div className="mt-16 pt-8 border-t border-slate-200">
+                    <div className="text-center mb-8">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                            What gets cleaned?
+                        </h3>
+                        <p className="text-slate-600">
+                            We remove all these markdown elements to give you
+                            clean, readable text
+                        </p>
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[
+                            { label: "Headers", example: "# ## ###" },
+                            {
+                                label: "Formatting",
+                                example: "**bold** *italic*",
+                            },
+                            { label: "Code", example: "`code` ```blocks```" },
+                            {
+                                label: "Links & Lists",
+                                example: "[links](url) • lists",
+                            },
+                        ].map((item, index) => (
+                            <div
+                                key={index}
+                                className="bg-white p-4 rounded-lg border border-slate-200 text-center"
+                            >
+                                <div className="font-medium text-slate-900 mb-1">
+                                    {item.label}
+                                </div>
+                                <div className="text-sm text-slate-500 font-mono">
+                                    {item.example}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    );
 }
